@@ -1,7 +1,9 @@
 import {Component} from '@angular/core';
-import {AlgorithmResult, DropFile, FD_LOG,
-    IlpMinerResult, IlpMinerService, PetriNetSerialisationService, Trace, XesLogParserService} from 'ilpn-components';
+import {AlgorithmResult, AlphaOracleService, DropFile, FD_LOG, IlpplMinerService,
+    LogToPartialOrderTransformerService,
+    NetAndReport, PetriNetSerialisationService, PetriNetToPartialOrderTransformerService, Trace, XesLogParserService} from 'ilpn-components';
 import { Subscription } from 'rxjs';
+
 
 @Component({
     selector: 'app-root',
@@ -20,7 +22,10 @@ export class AppComponent {
 
     constructor(private _logParser: XesLogParserService,
                 private _netSerializer: PetriNetSerialisationService,
-                private _miner: IlpMinerService) {
+                private _miner: IlpplMinerService,
+                private _oracle: AlphaOracleService,
+                private _logConverter: LogToPartialOrderTransformerService,
+                private _netToPo: PetriNetToPartialOrderTransformerService) {
     }
 
     ngOnDestroy(): void {
@@ -36,7 +41,12 @@ export class AppComponent {
         this.log = this._logParser.parse(files[0].content);
         console.debug(this.log);
 
-        this._sub = this._miner.mine(this.log).subscribe((r: IlpMinerResult) => {
+        const concurrency = this._oracle.determineConcurrency(this.log);
+
+        const poNets = this._logConverter.transformToPartialOrders(this.log, concurrency, {cleanLog: true, discardPrefixes: true});
+        const pos = poNets.map(p => this._netToPo.transform(p.net));
+
+        this._sub = this._miner.mine(pos).subscribe((r: NetAndReport) => {
             this.resultFiles = [new DropFile('model.pn', this._netSerializer.serialise(r.net))];
             this.processing = false;
         });
