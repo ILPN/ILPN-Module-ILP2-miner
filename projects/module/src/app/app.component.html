@@ -1,14 +1,15 @@
 <ilpn-page-layout>
     <h2>
         An implementation of
-        <br> ILPPL miner, submitted to PETRI NETS 2023. <!-- TODO text -->
+        <br> ILP&#178; miner, will be submitted to PETRI NETS 2023.
     </h2>
     <hr>
 
     <div fxLayout="row wrap" fxLayoutAlign="space-evenly start">
         <ilpn-file-upload descriptionText="Drop a XES log file here" [fileDisplay]="fdLog" [showText]="log === undefined" (fileContent)="processLogUpload($event)"></ilpn-file-upload>
 
-        <ilpn-file-download descriptionText="click to download synthesis result" [squareContent]="'🦈'" [disabled]="processing || resultFiles.length === 0" [files]="resultFiles"></ilpn-file-download>
+        <ilpn-file-download descriptionText="click to download model" [fileDisplay]="fdPN" [disabled]="processing || pnResult === undefined" [files]="pnResult"></ilpn-file-download>
+        <ilpn-file-download descriptionText="click to download report" [squareContent]="'🦈'" [disabled]="processing || reportResult === undefined" [files]="reportResult"></ilpn-file-download>
     </div>
 
 </ilpn-page-layout>
