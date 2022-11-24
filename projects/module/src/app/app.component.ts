@@ -36,18 +36,25 @@ export class AppComponent {
         this.processing = true;
         this.resultFiles = [];
 
-        const algorithmProtocol = new AlgorithmResult("ILP miner");
-
         this.log = this._logParser.parse(files[0].content);
         console.debug(this.log);
+
+        const lines = [`number of runs: ${this.log.length}`];
 
         const concurrency = this._oracle.determineConcurrency(this.log);
 
         const poNets = this._logConverter.transformToPartialOrders(this.log, concurrency, {cleanLog: true, discardPrefixes: true});
         const pos = poNets.map(p => this._netToPo.transform(p.net));
 
+        lines.push(`number of partial orders: ${pos.length}`);
+
+        const start = performance.now();
         this._sub = this._miner.mine(pos).subscribe((r: NetAndReport) => {
-            this.resultFiles = [new DropFile('model.pn', this._netSerializer.serialise(r.net))];
+            const stop = performance.now();
+            const report = new AlgorithmResult('ILPPL miner', start, stop);
+            lines.forEach(l => report.addOutputLine(l));
+            r.report.forEach(l => report.addOutputLine(l));
+            this.resultFiles = [new DropFile('model.pn', this._netSerializer.serialise(r.net)), report.toDropFile('report.txt')];
             this.processing = false;
         });
     }
