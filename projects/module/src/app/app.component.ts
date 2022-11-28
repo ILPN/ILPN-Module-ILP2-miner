@@ -1,8 +1,12 @@
 import {Component} from '@angular/core';
-import {AlgorithmResult, AlphaOracleService, DropFile, FD_LOG, FD_PETRI_NET, IlpplMinerService,
+import {
+    AlgorithmResult, AlphaOracleService, DropFile, FD_LOG, FD_PETRI_NET, IlpplMinerService,
     LogToPartialOrderTransformerService,
-    NetAndReport, PetriNetSerialisationService, PetriNetToPartialOrderTransformerService, Trace, XesLogParserService} from 'ilpn-components';
-import { Subscription } from 'rxjs';
+    NetAndReport,
+    PartialOrderSerialisationService,
+    PetriNet, PetriNetSerialisationService, PetriNetToPartialOrderTransformerService, Trace, XesLogParserService
+} from 'ilpn-components';
+import {Subscription} from 'rxjs';
 
 
 @Component({
@@ -27,7 +31,8 @@ export class AppComponent {
                 private _miner: IlpplMinerService,
                 private _oracle: AlphaOracleService,
                 private _logConverter: LogToPartialOrderTransformerService,
-                private _netToPo: PetriNetToPartialOrderTransformerService) {
+                private _netToPo: PetriNetToPartialOrderTransformerService,
+                private _poSerializer: PartialOrderSerialisationService) {
     }
 
     ngOnDestroy(): void {
@@ -50,15 +55,26 @@ export class AppComponent {
 
         lines.push(`number of partial orders: ${pos.length}`);
 
-        const start = performance.now();
-        this._sub = this._miner.mine(pos).subscribe((r: NetAndReport) => {
-            const stop = performance.now();
-            const report = new AlgorithmResult('ILP² miner', start, stop);
-            lines.forEach(l => report.addOutputLine(l));
-            r.report.forEach(l => report.addOutputLine(l));
-            this.pnResult = new DropFile('model.pn', this._netSerializer.serialise(r.net));
-            this.reportResult = report.toDropFile('report.txt');
-            this.processing = false;
-        });
+        if (typeof Worker !== 'undefined') {
+            console.debug('using webworker...');
+            const worker = new Worker(new URL('./web-worker/ilppl.worker', import.meta.url));
+            worker.onmessage = ({data}) => {
+                this.processMinerResult(data.net, data.report, data.start, data.stop, lines);
+            }
+            // worker.postMessage('help');
+            worker.postMessage({pos: pos.map(po => this._poSerializer.serialise(po))});
+        } else {
+            console.debug('without using webworker...');
+            // TODO
+        }
+    }
+
+    private processMinerResult(net: string, r: Array<string>, start: number, stop: number, lines: Array<string>) {
+        const report = new AlgorithmResult('ILP² miner', start, stop);
+        lines.forEach(l => report.addOutputLine(l));
+        r.forEach(l => report.addOutputLine(l));
+        this.pnResult = new DropFile('model.pn', net);
+        this.reportResult = report.toDropFile('report.txt');
+        this.processing = false;
     }
 }
