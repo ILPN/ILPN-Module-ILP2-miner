@@ -1,5 +1,6 @@
 import {Component} from '@angular/core';
-import {AlgorithmResult, AlphaOracleService, DropFile, FD_LOG, FD_PETRI_NET, IlpplMinerService,
+import {AlgorithmResult, AlphaOracleService,
+    BranchingProcessFoldingService, DropFile, FD_LOG, FD_PETRI_NET, IlpplMinerService,
     LogToPartialOrderTransformerService,
     NetAndReport, PetriNetSerialisationService, PetriNetToPartialOrderTransformerService, Trace, XesLogParserService} from 'ilpn-components';
 import { Subscription } from 'rxjs';
@@ -27,7 +28,8 @@ export class AppComponent {
                 private _miner: IlpplMinerService,
                 private _oracle: AlphaOracleService,
                 private _logConverter: LogToPartialOrderTransformerService,
-                private _netToPo: PetriNetToPartialOrderTransformerService) {
+                private _netToPo: PetriNetToPartialOrderTransformerService,
+                private _foldingService: BranchingProcessFoldingService) {
     }
 
     ngOnDestroy(): void {
@@ -46,12 +48,20 @@ export class AppComponent {
         const concurrency = this._oracle.determineConcurrency(this.log);
 
         const poNets = this._logConverter.transformToPartialOrders(this.log, concurrency, {cleanLog: true, discardPrefixes: true});
-        const pos = poNets.map(p => this._netToPo.transform(p.net));
 
-        lines.push(`number of partial orders: ${pos.length}`);
+        lines.push(`number of partial orders: ${poNets.length}`);
+
+        let bp;
+        try {
+            bp = this._foldingService.foldPartialOrders(poNets.map(pon => pon.net));
+        } catch (e) {
+            console.debug('pos could not be folded into a branching process');
+        }
+
+        const input = bp ?? poNets.map(p => this._netToPo.transform(p.net));
 
         const start = performance.now();
-        this._sub = this._miner.mine(pos).subscribe((r: NetAndReport) => {
+        this._sub = this._miner.mine(input).subscribe((r: NetAndReport) => {
             const stop = performance.now();
             const report = new AlgorithmResult('ILP² miner', start, stop);
             lines.forEach(l => report.addOutputLine(l));
