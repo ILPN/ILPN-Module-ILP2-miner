@@ -51,18 +51,12 @@ export class AppComponent {
 
         lines.push(`number of partial orders: ${poNets.length}`);
 
-        let bp;
-        try {
-            bp = this._foldingService.foldPartialOrders(poNets.map(pon => pon.net));
-        } catch (e) {
-            console.debug('pos could not be folded into a branching process');
-        }
-
-        const input = bp ?? poNets.map(p => this._netToPo.transform(p.net));
+        const bp = this._foldingService.foldPartialOrders(poNets.map(pon => pon.net));
 
         const start = performance.now();
-        this._sub = this._miner.mine(input).subscribe((r: NetAndReport) => {
+        this._sub = this._miner.mine(bp).subscribe((r: NetAndReport) => {
             const stop = performance.now();
+
             const report = new AlgorithmResult('ILP² miner', start, stop);
             lines.forEach(l => report.addOutputLine(l));
             r.report.forEach(l => report.addOutputLine(l));
