@@ -2,8 +2,10 @@ import {Component} from '@angular/core';
 import {AlgorithmResult, AlphaOracleService,
     BranchingProcessFoldingService, DropFile, FD_LOG, FD_PETRI_NET, IlpplMinerService,
     LogToPartialOrderTransformerService,
-    NetAndReport, PetriNetSerialisationService, PetriNetToPartialOrderTransformerService, Trace, XesLogParserService} from 'ilpn-components';
+    NetAndReport,
+    PartialOrderNetWithContainedTraces, PetriNetSerialisationService, PetriNetToPartialOrderTransformerService, Trace, XesLogParserService} from 'ilpn-components';
 import { Subscription } from 'rxjs';
+import {FormControl} from '@angular/forms';
 
 
 @Component({
@@ -16,10 +18,11 @@ export class AppComponent {
     public fdLog = FD_LOG;
     public fdPN = FD_PETRI_NET;
 
-    public log: Array<Trace> | undefined;
+    public logLoaded = false;
     public pnResult: DropFile | undefined = undefined;
     public reportResult: DropFile | undefined = undefined;
     public processing = false;
+    public fcThreshold: FormControl;
 
     private _sub: Subscription | undefined;
 
@@ -30,6 +33,7 @@ export class AppComponent {
                 private _logConverter: LogToPartialOrderTransformerService,
                 private _netToPo: PetriNetToPartialOrderTransformerService,
                 private _foldingService: BranchingProcessFoldingService) {
+        this.fcThreshold = new FormControl(1);
     }
 
     ngOnDestroy(): void {
@@ -40,18 +44,31 @@ export class AppComponent {
         this.processing = true;
         this.pnResult = undefined;
 
-        this.log = this._logParser.parse(files[0].content);
-        console.debug(this.log);
+        let log: Array<Trace> | undefined = this._logParser.parse(files[0].content);
+        this.logLoaded = true;
+        // console.debug(log);
 
-        const lines = [`number of traces: ${this.log.length}`];
+        const lines = [`number of traces: ${log.length}`];
 
-        const concurrency = this._oracle.determineConcurrency(this.log);
+        const concurrency = this._oracle.determineConcurrency(log);
 
-        const poNets = this._logConverter.transformToPartialOrders(this.log, concurrency, {cleanLog: true, discardPrefixes: true});
+        let poNets: Array<PartialOrderNetWithContainedTraces> | undefined = this._logConverter.transformToPartialOrders(log, concurrency, {cleanLog: true, discardPrefixes: true});
+        log = undefined;
 
         lines.push(`number of partial orders: ${poNets.length}`);
+        lines.push(`number of traces contained in partial orders, after prefixes were discarded ${poNets!.reduce((acc, a) => acc + a.net.frequency!, 0)}`);
+
+        poNets!.sort((a,b) => a.net.frequency! - b.net.frequency!);
+        const i = poNets!.findIndex(a => a.net.frequency! >= this.fcThreshold.value)
+        poNets?.splice(0, i);
+
+        if (this.fcThreshold.value > 1) {
+            lines.push(`number of partial orders containing at least ${this.fcThreshold.value} traces: ${poNets!.length}`)
+            lines.push(`number of traces contained in these partial orders ${poNets!.reduce((acc, a) => acc + a.net.frequency!, 0)}`);
+        }
 
         const bp = this._foldingService.foldPartialOrders(poNets.map(pon => pon.net));
+        poNets = undefined;
 
         const start = performance.now();
         this._sub = this._miner.mine(bp).subscribe((r: NetAndReport) => {

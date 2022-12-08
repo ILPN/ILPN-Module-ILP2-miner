@@ -6,7 +6,14 @@
     <hr>
 
     <div fxLayout="row wrap" fxLayoutAlign="space-evenly start">
-        <ilpn-file-upload descriptionText="Drop a XES log file here" [fileDisplay]="fdLog" [showText]="log === undefined" (fileContent)="processLogUpload($event)"></ilpn-file-upload>
+        <ilpn-file-upload descriptionText="Drop a XES log file here" [fileDisplay]="fdLog" [showText]="!logLoaded" (fileContent)="processLogUpload($event)"></ilpn-file-upload>
+
+        <div fxLayout="column" fxLayoutAlign="center center" class="sliders">
+            <mat-form-field appearance="fill">
+                <mat-label>Frequency Threshold</mat-label>
+                <input matInput type="number" [formControl]="fcThreshold">
+            </mat-form-field>
+        </div>
 
         <ilpn-file-download descriptionText="click to download model" [fileDisplay]="fdPN" [disabled]="processing || pnResult === undefined" [files]="pnResult"></ilpn-file-download>
         <ilpn-file-download descriptionText="click to download report" [squareContent]="'🦈'" [disabled]="processing || reportResult === undefined" [files]="reportResult"></ilpn-file-download>
