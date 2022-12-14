@@ -1,7 +1,8 @@
 <ilpn-page-layout>
     <h2>
-        An implementation of
-        <br> ILP&#178; miner, will be submitted to PETRI NETS 2023.
+        Mining a Petri net from an event log using the ILP&#178; miner - This algorithm will be submitted as
+        <br><span class="paper">ILP&#178; Miner – Process Discovery for Partially Ordered Event Logs using Integer Linear Programming</span> by S. Folz-Weinstein, R. Bergenthum and J. Kovář to PETRI NETS 2023.
+        <br> Here, we generate a place for every directly follows pair and use minimal regions as the objective function.
     </h2>
     <hr>
 
@@ -24,7 +25,7 @@
     <div fxLayout="row wrap" fxLayoutAlign="start start" fxLayout.sm="column" fxLayoutAlign.sm="space-between center">
         <ilpn-descriptive-link [fileDisplay]="fdLog" title="Experiment 1" description="The reviewing example introduced in Chapter 8 of the Process Mining: Data Science in Action book [1]" link="assets/reviewingExample.xes" [download]="true" [descriptionLines]="5"></ilpn-descriptive-link>
         <ilpn-descriptive-link [fileDisplay]="fdLog" title="Experiment 2" description="The repair example from the ProM Tools tutorial [2]" link="assets/repairExample.xes" [download]="true" [descriptionLines]="5"></ilpn-descriptive-link>
-        <ilpn-descriptive-link [fileDisplay]="fdLog" title="Experiment 3" description="The repair example from the ProM Tools tutorial [2] containing only the traces corresponding to the 4 most frequent Hasse diagrams" link="assets/repairExample4Hasse.xes" [download]="true" [descriptionLines]="5"></ilpn-descriptive-link>
+        <ilpn-descriptive-link [fileDisplay]="fdLog" title="Experiment 3" description="The 4 most frequent Hasse diagrams of the repair example from the ProM Tools tutorial [2]" link="assets/repairExample4Hasse.xes" [download]="true" [descriptionLines]="5"></ilpn-descriptive-link>
         <ilpn-descriptive-link [fileDisplay]="fdLog" title="Experiment 4" description="The teleclaims example introduced in Chapter 8 of the Process Mining: Data Science in Action book [1]" link="assets/teleclaimsExample.xes" [download]="true" [descriptionLines]="5"></ilpn-descriptive-link>
     </div>
 
