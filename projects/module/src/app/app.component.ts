@@ -1,6 +1,6 @@
 import {Component} from '@angular/core';
 import {AlgorithmResult, AlphaOracleService,
-    BranchingProcessFoldingService, DropFile, FD_LOG, FD_PETRI_NET, IlpplMinerService,
+    BranchingProcessFoldingService, DropFile, FD_LOG, FD_PETRI_NET, Ilp2MinerService,
     LogToPartialOrderTransformerService,
     NetAndReport,
     PartialOrderNetWithContainedTraces, PetriNetSerialisationService, PetriNetToPartialOrderTransformerService, Trace, XesLogParserService} from 'ilpn-components';
@@ -28,7 +28,7 @@ export class AppComponent {
 
     constructor(private _logParser: XesLogParserService,
                 private _netSerializer: PetriNetSerialisationService,
-                private _miner: IlpplMinerService,
+                private _miner: Ilp2MinerService,
                 private _oracle: AlphaOracleService,
                 private _logConverter: LogToPartialOrderTransformerService,
                 private _netToPo: PetriNetToPartialOrderTransformerService,
