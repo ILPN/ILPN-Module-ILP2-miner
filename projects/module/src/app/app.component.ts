@@ -3,7 +3,7 @@ import {AlgorithmResult, AlphaOracleService,
     BranchingProcessFoldingService, DropFile, FD_LOG, FD_PETRI_NET, Ilp2MinerService,
     LogToPartialOrderTransformerService,
     NetAndReport,
-    PartialOrderNetWithContainedTraces, PetriNetSerialisationService, PetriNetToPartialOrderTransformerService, Trace, XesLogParserService} from 'ilpn-components';
+    PartialOrder, PetriNetSerialisationService, PartialOrderToPetriNetTransformerService, Trace, XesLogParserService} from 'ilpn-components';
 import { Subscription } from 'rxjs';
 import {FormControl} from '@angular/forms';
 
@@ -31,7 +31,7 @@ export class AppComponent {
                 private _miner: Ilp2MinerService,
                 private _oracle: AlphaOracleService,
                 private _logConverter: LogToPartialOrderTransformerService,
-                private _netToPo: PetriNetToPartialOrderTransformerService,
+                protected _poToPnTransformer: PartialOrderToPetriNetTransformerService,
                 private _foldingService: BranchingProcessFoldingService) {
     }
 
@@ -51,23 +51,23 @@ export class AppComponent {
 
         const concurrency = this._oracle.determineConcurrency(log);
 
-        let poNets: Array<PartialOrderNetWithContainedTraces> | undefined = this._logConverter.transformToPartialOrders(log, concurrency, {cleanLog: true, discardPrefixes: true});
+        let pos: Array<PartialOrder> | undefined = this._logConverter.transformToPartialOrders(log, concurrency, {cleanLog: true, discardPrefixes: true});
         log = undefined;
 
-        lines.push(`number of partial orders: ${poNets.length}`);
-        lines.push(`number of traces contained in partial orders, after prefixes were discarded ${poNets!.reduce((acc, a) => acc + a.net.frequency!, 0)}`);
+        lines.push(`number of partial orders: ${pos.length}`);
+        lines.push(`number of traces contained in partial orders, after prefixes were discarded ${pos!.reduce((acc, a) => acc + a.frequency!, 0)}`);
 
-        poNets!.sort((a, b) => a.net.frequency! - b.net.frequency!);
-        const i = poNets!.findIndex(a => a.net.frequency! >= (this.fcThreshold.value ?? 1))
-        poNets?.splice(0, i);
+        pos!.sort((a, b) => a.frequency! - b.frequency!);
+        const i = pos!.findIndex(a => a.frequency! >= (this.fcThreshold.value ?? 1))
+        pos?.splice(0, i);
 
         if ((this.fcThreshold.value ?? 1) > 1) {
-            lines.push(`number of partial orders containing at least ${this.fcThreshold.value} traces: ${poNets!.length}`)
-            lines.push(`number of traces contained in these partial orders ${poNets!.reduce((acc, a) => acc + a.net.frequency!, 0)}`);
+            lines.push(`number of partial orders containing at least ${this.fcThreshold.value} traces: ${pos!.length}`)
+            lines.push(`number of traces contained in these partial orders ${pos!.reduce((acc, a) => acc + a.frequency!, 0)}`);
         }
 
-        const bp = this._foldingService.foldPartialOrders(poNets.map(pon => pon.net));
-        poNets = undefined;
+        const bp = this._foldingService.foldPartialOrders(pos.map(po => this._poToPnTransformer.transform(po)));
+        pos = undefined;
 
         const start = performance.now();
         this._sub = this._miner.mine(bp).subscribe((r: NetAndReport) => {
