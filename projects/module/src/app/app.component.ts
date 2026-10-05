@@ -5,7 +5,7 @@ import {AlgorithmResult, AlphaOracleService,
     NetAndReport,
     PartialOrderNetWithContainedTraces, PetriNetSerialisationService, PetriNetToPartialOrderTransformerService, Trace, XesLogParserService} from 'ilpn-components';
 import { Subscription } from 'rxjs';
-import {FormControl} from '@angular/forms';
+import {UntypedFormControl} from '@angular/forms';
 
 
 @Component({
@@ -22,7 +22,7 @@ export class AppComponent {
     public pnResult: DropFile | undefined = undefined;
     public reportResult: DropFile | undefined = undefined;
     public processing = false;
-    public fcThreshold: FormControl;
+    public fcThreshold: UntypedFormControl;
 
     private _sub: Subscription | undefined;
 
@@ -33,7 +33,7 @@ export class AppComponent {
                 private _logConverter: LogToPartialOrderTransformerService,
                 private _netToPo: PetriNetToPartialOrderTransformerService,
                 private _foldingService: BranchingProcessFoldingService) {
-        this.fcThreshold = new FormControl(1);
+        this.fcThreshold = new UntypedFormControl(1);
     }
 
     ngOnDestroy(): void {
