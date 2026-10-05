@@ -5,7 +5,7 @@ import {AlgorithmResult, AlphaOracleService,
     NetAndReport,
     PartialOrderNetWithContainedTraces, PetriNetSerialisationService, PetriNetToPartialOrderTransformerService, Trace, XesLogParserService} from 'ilpn-components';
 import { Subscription } from 'rxjs';
-import {UntypedFormControl} from '@angular/forms';
+import {FormControl} from '@angular/forms';
 
 
 @Component({
@@ -22,7 +22,7 @@ export class AppComponent {
     public pnResult: DropFile | undefined = undefined;
     public reportResult: DropFile | undefined = undefined;
     public processing = false;
-    public fcThreshold: UntypedFormControl;
+    public fcThreshold = new FormControl(1);
 
     private _sub: Subscription | undefined;
 
@@ -33,7 +33,6 @@ export class AppComponent {
                 private _logConverter: LogToPartialOrderTransformerService,
                 private _netToPo: PetriNetToPartialOrderTransformerService,
                 private _foldingService: BranchingProcessFoldingService) {
-        this.fcThreshold = new UntypedFormControl(1);
     }
 
     ngOnDestroy(): void {
@@ -58,11 +57,11 @@ export class AppComponent {
         lines.push(`number of partial orders: ${poNets.length}`);
         lines.push(`number of traces contained in partial orders, after prefixes were discarded ${poNets!.reduce((acc, a) => acc + a.net.frequency!, 0)}`);
 
-        poNets!.sort((a,b) => a.net.frequency! - b.net.frequency!);
-        const i = poNets!.findIndex(a => a.net.frequency! >= this.fcThreshold.value)
+        poNets!.sort((a, b) => a.net.frequency! - b.net.frequency!);
+        const i = poNets!.findIndex(a => a.net.frequency! >= (this.fcThreshold.value ?? 1))
         poNets?.splice(0, i);
 
-        if (this.fcThreshold.value > 1) {
+        if ((this.fcThreshold.value ?? 1) > 1) {
             lines.push(`number of partial orders containing at least ${this.fcThreshold.value} traces: ${poNets!.length}`)
             lines.push(`number of traces contained in these partial orders ${poNets!.reduce((acc, a) => acc + a.net.frequency!, 0)}`);
         }
