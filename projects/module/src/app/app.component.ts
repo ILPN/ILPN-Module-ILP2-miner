@@ -1,10 +1,22 @@
 import {Component} from '@angular/core';
-import {AlgorithmResult, AlphaOracleService,
-    BranchingProcessFoldingService, DropFile, FD_LOG, FD_PETRI_NET, Ilp2MinerService,
+import {
+    AlgorithmResult,
+    AlphaOracleService,
+    BranchingProcessFoldingService,
+    DropFile,
+    FD_LOG,
+    FD_PETRI_NET,
+    Ilp2MinerService,
     LogToPartialOrderTransformerService,
     NetAndReport,
-    PartialOrder, PetriNetSerialisationService, PartialOrderToPetriNetTransformerService, Trace, XesLogParserService} from 'ilpn-components';
-import { Subscription } from 'rxjs';
+    PartialOrder,
+    PartialOrderToPetriNetTransformerService,
+    PetriNetSerialisationService,
+    PnOutputFileFormat,
+    Trace,
+    XesLogParserService
+} from 'ilpn-components';
+import {Subscription} from 'rxjs';
 import {FormControl} from '@angular/forms';
 
 
@@ -76,7 +88,7 @@ export class AppComponent {
             const report = new AlgorithmResult('ILP² miner', start, stop);
             lines.forEach(l => report.addOutputLine(l));
             r.report.forEach(l => report.addOutputLine(l));
-            this.pnResult = new DropFile('model.pn', this._netSerializer.serialise(r.net));
+            this.pnResult = new DropFile('model.json', this._netSerializer.serialise(r.net, PnOutputFileFormat.JSON));
             this.reportResult = report.toDropFile('report.txt');
             this.processing = false;
         });
